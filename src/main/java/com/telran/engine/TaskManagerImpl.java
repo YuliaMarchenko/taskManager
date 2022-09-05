@@ -3,16 +3,20 @@ package com.telran.engine;
 import com.telran.entities.Task;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskManagerImpl implements TasksManager{
     private Database db;
     private static final String SQL_INSERT = "INSERT INTO TASKS (name, isCompleted, assignedPerson, createdDate, completionDate) VALUES (?,?,?,?,?)";
+    private static final String SQL_SELECT_NOT_COMPLETED = "SELECT * FROM TASKS WHERE ISCOMPLETED IS FALSE";
 
 
     public TaskManagerImpl() throws SQLException {
         this.db = new Database();
     }
+
     @Override
     public boolean createTask(Task task){
         Connection conn = db.getConn();
@@ -42,7 +46,26 @@ public class TaskManagerImpl implements TasksManager{
 
     @Override
     public List<Task> findNotCompletedTasks() {
-        return null;
+        List<Task> tasks = new ArrayList<>();
+        try(Connection conn = db.getConn();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(SQL_SELECT_NOT_COMPLETED);
+        ) {
+            while(rs.next()){
+                Task task = Task.builder()
+                        .id(rs.getInt("id"))
+                        .name(rs.getString("name"))
+                        .isCompleted(rs.getBoolean("isCompleted"))
+                        .assignedPerson(rs.getString("assignedPerson"))
+                        .createdDate(rs.getDate("createdDate").toLocalDate())
+                        .completionDate(rs.getDate("completionDate").toLocalDate())
+                        .build();
+                tasks.add(task);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tasks;
     }
 
     @Override
