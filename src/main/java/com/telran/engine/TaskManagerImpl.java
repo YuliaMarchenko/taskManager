@@ -3,22 +3,25 @@ package com.telran.engine;
 import com.telran.entities.Task;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TaskManagerImpl implements TasksManager{
+public class TaskManagerImpl implements TasksManager {
     private Database db;
     private static final String SQL_INSERT = "INSERT INTO TASKS (name, isCompleted, assignedPerson, createdDate, completionDate) VALUES (?,?,?,?,?)";
     private static final String SQL_SELECT_NOT_COMPLETED = "SELECT * FROM TASKS WHERE isCompleted IS FALSE";
     private static final String SQL_SELECT_ASSIGNED_PERSON = "SELECT * FROM TASKS WHERE assignedPerson = ?";
-
+    private static final String SQL_SELECT_TASKS_THIS_WEEK = "SELECT * FROM TASKS WHERE completionDate BETWEEN ? AND ?";
 
     public TaskManagerImpl() throws SQLException {
         this.db = new Database();
     }
 
     @Override
-    public boolean createTask(Task task){
+    public boolean createTask(Task task) {
         Connection conn = db.getConn();
         try (PreparedStatement preparedStatement = conn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, task.getName());
@@ -31,13 +34,12 @@ public class TaskManagerImpl implements TasksManager{
             try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     task.setId(generatedKeys.getInt(1));
-                }
-                else {
+                } else {
                     throw new SQLException("Creating user failed, no ID obtained.");
                 }
             }
 
-        } catch (SQLException ex){
+        } catch (SQLException ex) {
             System.err.format("SQL State: %s\n%s", ex.getSQLState(), ex.getMessage());
             return false;
         }
@@ -47,9 +49,9 @@ public class TaskManagerImpl implements TasksManager{
     @Override
     public List<Task> findNotCompletedTasks() {
         List<Task> tasks = new ArrayList<>();
-        try(Connection conn = db.getConn();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(SQL_SELECT_NOT_COMPLETED);
+        try (Connection conn = db.getConn();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(SQL_SELECT_NOT_COMPLETED);
         ) {
             extractTasks(rs, tasks);
         } catch (SQLException e) {
@@ -61,10 +63,10 @@ public class TaskManagerImpl implements TasksManager{
     @Override
     public List<Task> findAssignedTasks(String person) {
         List<Task> tasks = new ArrayList<>();
-        try(Connection conn = db.getConn();
-            PreparedStatement  preparedStatement = conn.prepareStatement(SQL_SELECT_ASSIGNED_PERSON);
+        try (Connection conn = db.getConn();
+             PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_ASSIGNED_PERSON);
         ) {
-            preparedStatement.setString(1,person);
+            preparedStatement.setString(1, person);
             ResultSet rs = preparedStatement.executeQuery();
             extractTasks(rs, tasks);
         } catch (SQLException e) {
@@ -74,7 +76,7 @@ public class TaskManagerImpl implements TasksManager{
     }
 
     private void extractTasks(ResultSet rs, List<Task> tasks) throws SQLException {
-        while(rs.next()){
+        while (rs.next()) {
             Task task = Task.builder()
                     .id(rs.getInt("id"))
                     .name(rs.getString("name"))
@@ -89,7 +91,22 @@ public class TaskManagerImpl implements TasksManager{
 
     @Override
     public List<Task> findTasksThisWeekTasks() {
-        return null;
+        long dayOfWeek = LocalDate.now().getDayOfWeek().getValue();
+        long daysUntilSunday = 7 - dayOfWeek;
+        LocalDate today = LocalDate.now();
+        LocalDate sunday = today.plusDays(daysUntilSunday);
+        List<Task> tasks = new ArrayList<>();
+        try (Connection conn = db.getConn();
+             PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_TASKS_THIS_WEEK);
+        ) {
+            preparedStatement.setDate(1, Date.valueOf(today));
+            preparedStatement.setDate(2, Date.valueOf(sunday));
+            ResultSet rs = preparedStatement.executeQuery();
+            extractTasks(rs, tasks);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tasks;
     }
 
     @Override
