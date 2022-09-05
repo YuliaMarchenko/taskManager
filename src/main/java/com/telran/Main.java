@@ -20,8 +20,13 @@ public class Main {
 //        taskManager.createTask(task);
 //        System.out.println(task.getId());
 
-        for (Task task:taskManager.findNotCompletedTasks()
-             ) {
+//        for (Task task:taskManager.findNotCompletedTasks()
+//             ) {
+//            System.out.println(task.getName());
+//        }
+
+        for (Task task:taskManager.findAssignedTasks("Roman")
+        ) {
             System.out.println(task.getName());
         }
 
