@@ -29,9 +29,11 @@ public class Main {
 //            System.out.println(task.getName());
 //        }
 
-        for(Task task : taskManager.findTasksThisWeekTasks()){
-            System.out.println(task.getName());
-        }
+//        for(Task task : taskManager.findTasksThisWeekTasks()){
+//            System.out.println(task.getName());
+//        }
+
+        taskManager.deleteTask("name today");
 
     }
 }

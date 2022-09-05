@@ -4,8 +4,6 @@ import com.telran.entities.Task;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +13,7 @@ public class TaskManagerImpl implements TasksManager {
     private static final String SQL_SELECT_NOT_COMPLETED = "SELECT * FROM TASKS WHERE isCompleted IS FALSE";
     private static final String SQL_SELECT_ASSIGNED_PERSON = "SELECT * FROM TASKS WHERE assignedPerson = ?";
     private static final String SQL_SELECT_TASKS_THIS_WEEK = "SELECT * FROM TASKS WHERE completionDate BETWEEN ? AND ?";
+    private static final String SQL_DELETE_TASK = "DELETE FROM TASKS WHERE name = ?";
 
     public TaskManagerImpl() throws SQLException {
         this.db = new Database();
@@ -111,6 +110,15 @@ public class TaskManagerImpl implements TasksManager {
 
     @Override
     public boolean deleteTask(String taskName) {
-        return false;
+        try (Connection conn = db.getConn();
+             PreparedStatement preparedStatement = conn.prepareStatement(SQL_DELETE_TASK);
+        ) {
+            preparedStatement.setString(1, taskName);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }
