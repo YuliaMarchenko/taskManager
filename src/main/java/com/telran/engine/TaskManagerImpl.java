@@ -48,8 +48,8 @@ public class TaskManagerImpl implements TasksManager {
     @Override
     public List<Task> findNotCompletedTasks() {
         List<Task> tasks = new ArrayList<>();
-        try (Connection conn = db.getConn();
-             Statement stmt = conn.createStatement();
+        Connection conn = db.getConn();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(SQL_SELECT_NOT_COMPLETED);
         ) {
             extractTasks(rs, tasks);
@@ -62,8 +62,8 @@ public class TaskManagerImpl implements TasksManager {
     @Override
     public List<Task> findAssignedTasks(String person) {
         List<Task> tasks = new ArrayList<>();
-        try (Connection conn = db.getConn();
-             PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_ASSIGNED_PERSON);
+        Connection conn = db.getConn();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_ASSIGNED_PERSON);
         ) {
             preparedStatement.setString(1, person);
             ResultSet rs = preparedStatement.executeQuery();
@@ -95,8 +95,8 @@ public class TaskManagerImpl implements TasksManager {
         LocalDate today = LocalDate.now();
         LocalDate sunday = today.plusDays(daysUntilSunday);
         List<Task> tasks = new ArrayList<>();
-        try (Connection conn = db.getConn();
-             PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_TASKS_THIS_WEEK);
+        Connection conn = db.getConn();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(SQL_SELECT_TASKS_THIS_WEEK);
         ) {
             preparedStatement.setDate(1, Date.valueOf(today));
             preparedStatement.setDate(2, Date.valueOf(sunday));
@@ -110,8 +110,8 @@ public class TaskManagerImpl implements TasksManager {
 
     @Override
     public boolean deleteTask(String taskName) {
-        try (Connection conn = db.getConn();
-             PreparedStatement preparedStatement = conn.prepareStatement(SQL_DELETE_TASK);
+        Connection conn = db.getConn();
+        try (PreparedStatement preparedStatement = conn.prepareStatement(SQL_DELETE_TASK);
         ) {
             preparedStatement.setString(1, taskName);
             preparedStatement.execute();
