@@ -1,10 +1,10 @@
 package com.telran;
 
-import com.telran.engine.TaskManagerImpl;
 import com.telran.engine.TasksManager;
 import com.telran.entities.Task;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,12 +33,18 @@ public class TaskController {
     }
 
     @DeleteMapping("/tasks/{name}")
-    boolean deleteTask(@PathVariable String name){
-        return repository.deleteTask(name);
+    Map<String, Boolean> deleteTask(@PathVariable String name){
+        return result(repository.deleteTask(name));
     }
 
     @PostMapping( "/tasks")
-    boolean createTask(@RequestBody Task task) {
-        return repository.createTask(task);
+    Map<String, Boolean> createTask(@RequestBody Task task) {
+        return result(repository.createTask(task));
+    }
+
+    public Map<String, Boolean> result(boolean answer){
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("status", answer);
+        return result;
     }
 }

@@ -115,6 +115,7 @@ public class TaskManagerImpl implements TasksManager {
         ) {
             preparedStatement.setString(1, taskName);
             preparedStatement.execute();
+            if (preparedStatement.getUpdateCount() == 0) return false;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
